@@ -1,0 +1,123 @@
+const sqlite3 = require('sqlite3').verbose();
+const bcrypt = require('bcryptjs');
+const path = require('path');
+
+const DB_PATH = path.join(__dirname, 'inventory.db');
+
+let db;
+
+const init = () => {
+  return new Promise((resolve, reject) => {
+    db = new sqlite3.Database(DB_PATH, (err) => {
+      if (err) {
+        console.error('Error opening database:', err);
+        reject(err);
+        return;
+      }
+      console.log('Connected to SQLite database');
+      createTables().then(resolve).catch(reject);
+    });
+  });
+};
+
+const createTables = () => {
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      // Users table
+      db.run(`CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'user',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`, (err) => {
+        if (err) {
+          console.error('Error creating users table:', err);
+          reject(err);
+          return;
+        }
+      });
+
+      // Inventory items table
+      db.run(`CREATE TABLE IF NOT EXISTS inventory_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_name TEXT NOT NULL,
+        category TEXT,
+        brand TEXT,
+        quantity INTEGER NOT NULL DEFAULT 0,
+        unit_price REAL,
+        sku TEXT,
+        description TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_by INTEGER NOT NULL,
+        approved_by INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        approved_at DATETIME,
+        FOREIGN KEY (created_by) REFERENCES users(id),
+        FOREIGN KEY (approved_by) REFERENCES users(id)
+      )`, (err) => {
+        if (err) {
+          console.error('Error creating inventory_items table:', err);
+          reject(err);
+          return;
+        }
+      });
+
+      // Create default admin user if it doesn't exist
+      db.get('SELECT * FROM users WHERE role = ?', ['admin'], (err, row) => {
+        if (err) {
+          console.error('Error checking admin user:', err);
+          reject(err);
+          return;
+        }
+        
+        if (!row) {
+          const defaultPassword = bcrypt.hashSync('admin123', 10);
+          db.run(
+            'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
+            ['admin', 'admin@prestige.com', defaultPassword, 'admin'],
+            (err) => {
+              if (err) {
+                console.error('Error creating default admin:', err);
+                reject(err);
+                return;
+              }
+              console.log('Default admin user created: username=admin, password=admin123');
+              resolve();
+            }
+          );
+        } else {
+          resolve();
+        }
+      });
+    });
+  });
+};
+
+const getDb = () => db;
+
+const close = () => {
+  return new Promise((resolve, reject) => {
+    if (db) {
+      db.close((err) => {
+        if (err) {
+          reject(err);
+        } else {
+          console.log('Database connection closed');
+          resolve();
+        }
+      });
+    } else {
+      resolve();
+    }
+  });
+};
+
+module.exports = {
+  init,
+  getDb,
+  close
+};
+
