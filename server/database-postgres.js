@@ -147,11 +147,17 @@ class PostgresAdapter {
   run(sql, params, callback) {
     const { sql: pgSql, params: pgParams } = this.convertQuery(sql, params);
     
-    this.pool.query(pgSql, pgParams)
+    // Check if this is an INSERT statement that needs RETURNING id
+    const isInsert = /^\s*INSERT\s+INTO/i.test(sql.trim());
+    const finalSql = isInsert && !pgSql.includes('RETURNING') 
+      ? pgSql.replace(/;?\s*$/, '') + ' RETURNING id'
+      : pgSql;
+    
+    this.pool.query(finalSql, pgParams)
       .then(result => {
         // Create a mock 'this' object with lastID for SQLite compatibility
         const mockThis = {
-          lastID: result.rows[0]?.id || result.insertId || null,
+          lastID: result.rows[0]?.id || null,
           changes: result.rowCount || 0
         };
         
@@ -204,7 +210,11 @@ class PostgresAdapter {
   // Async versions for modern code
   async runAsync(sql, params) {
     const { sql: pgSql, params: pgParams } = this.convertQuery(sql, params);
-    const result = await this.pool.query(pgSql, pgParams);
+    const isInsert = /^\s*INSERT\s+INTO/i.test(sql.trim());
+    const finalSql = isInsert && !pgSql.includes('RETURNING') 
+      ? pgSql.replace(/;?\s*$/, '') + ' RETURNING id'
+      : pgSql;
+    const result = await this.pool.query(finalSql, pgParams);
     return {
       lastID: result.rows[0]?.id || null,
       changes: result.rowCount || 0
