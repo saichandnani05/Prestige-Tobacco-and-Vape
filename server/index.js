@@ -12,7 +12,15 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Middleware
-app.use(cors());
+// CORS configuration for Vercel deployment
+const corsOptions = {
+  origin: process.env.VERCEL 
+    ? ['https://*.vercel.app', process.env.VERCEL_URL] 
+    : true,
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -81,26 +89,36 @@ db.init()
     console.log('✅ GET /api/users/test - Test route');
     console.log('==========================================\n');
     
-    const server = app.listen(PORT, () => {
-      console.log(`✅ Server running on port ${PORT}`);
-      console.log(`✅ Ready to accept requests at http://localhost:${PORT}`);
-    });
+    // Only start server if not in Vercel environment
+    if (process.env.VERCEL !== '1') {
+      const server = app.listen(PORT, () => {
+        console.log(`✅ Server running on port ${PORT}`);
+        console.log(`✅ Ready to accept requests at http://localhost:${PORT}`);
+      });
 
-    server.on('error', (err) => {
-      if (err.code === 'EADDRINUSE') {
-        console.error(`Port ${PORT} is already in use. Please kill the process using that port or use a different port.`);
-        console.error(`To find and kill the process: lsof -ti:${PORT} | xargs kill -9`);
-        process.exit(1);
-      } else {
-        console.error('Server error:', err);
-        process.exit(1);
-      }
-    });
+      server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+          console.error(`Port ${PORT} is already in use. Please kill the process using that port or use a different port.`);
+          console.error(`To find and kill the process: lsof -ti:${PORT} | xargs kill -9`);
+          process.exit(1);
+        } else {
+          console.error('Server error:', err);
+          process.exit(1);
+        }
+      });
+    } else {
+      console.log('✅ Running on Vercel - serverless mode');
+    }
   })
   .catch((err) => {
     console.error('Failed to initialize database:', err);
-    process.exit(1);
+    if (process.env.VERCEL !== '1') {
+      process.exit(1);
+    }
   });
+
+// Export app for Vercel serverless functions
+module.exports = app;
 
 // Handle uncaught errors
 process.on('uncaughtException', (err) => {

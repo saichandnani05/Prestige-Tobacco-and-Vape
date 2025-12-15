@@ -1,8 +1,19 @@
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const fs = require('fs');
 
-const DB_PATH = path.join(__dirname, 'inventory.db');
+// For Vercel, use /tmp directory (writable filesystem)
+// For local development, use project directory
+const DB_DIR = process.env.VERCEL === '1' 
+  ? '/tmp' 
+  : __dirname;
+const DB_PATH = path.join(DB_DIR, 'inventory.db');
+
+// Ensure directory exists
+if (!fs.existsSync(DB_DIR)) {
+  fs.mkdirSync(DB_DIR, { recursive: true });
+}
 
 let db;
 
