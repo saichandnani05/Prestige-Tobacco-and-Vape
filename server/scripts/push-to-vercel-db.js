@@ -73,6 +73,57 @@ const pushData = async () => {
     client = await pool.connect();
     console.log('✅ Connected to PostgreSQL database');
     
+    // Ensure tables exist and allow manual ID insertion
+    console.log('📋 Ensuring tables exist...');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL DEFAULT 'user',
+        firebase_uid VARCHAR(255),
+        permissions TEXT DEFAULT '{}',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS inventory_items (
+        id SERIAL PRIMARY KEY,
+        product_name VARCHAR(255) NOT NULL,
+        category VARCHAR(255),
+        brand VARCHAR(255),
+        quantity INTEGER NOT NULL DEFAULT 0,
+        unit_price DECIMAL(10, 2),
+        sku VARCHAR(255),
+        description TEXT,
+        status VARCHAR(50) NOT NULL DEFAULT 'pending',
+        created_by INTEGER NOT NULL REFERENCES users(id),
+        approved_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        approved_at TIMESTAMP
+      )
+    `);
+    
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS sales (
+        id SERIAL PRIMARY KEY,
+        inventory_item_id INTEGER NOT NULL REFERENCES inventory_items(id),
+        quantity_sold INTEGER NOT NULL,
+        unit_price DECIMAL(10, 2) NOT NULL,
+        total_amount DECIMAL(10, 2) NOT NULL,
+        sold_by INTEGER NOT NULL REFERENCES users(id),
+        customer_name VARCHAR(255),
+        payment_method VARCHAR(50),
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    console.log('✅ Tables verified\n');
+    
     // Start transaction
     await client.query('BEGIN');
     console.log('📦 Starting data migration...\n');
@@ -80,6 +131,9 @@ const pushData = async () => {
     // 1. Push Users
     console.log('👥 Migrating users...');
     const users = await sqliteQuery('SELECT * FROM users ORDER BY id');
+    
+    // First, ensure users table allows manual ID insertion
+    await client.query('ALTER TABLE users ALTER COLUMN id DROP DEFAULT');
     
     for (const user of users) {
       await client.query(
@@ -111,10 +165,14 @@ const pushData = async () => {
     if (maxUserId.rows[0]?.max_id) {
       await client.query(`SELECT setval('users_id_seq', $1, true)`, [maxUserId.rows[0].max_id]);
     }
+    await client.query('ALTER TABLE users ALTER COLUMN id SET DEFAULT nextval(\'users_id_seq\')');
     
     // 2. Push Inventory Items
     console.log('📦 Migrating inventory items...');
     const items = await sqliteQuery('SELECT * FROM inventory_items ORDER BY id');
+    
+    // Ensure inventory_items table allows manual ID insertion
+    await client.query('ALTER TABLE inventory_items ALTER COLUMN id DROP DEFAULT');
     
     for (const item of items) {
       await client.query(
@@ -160,10 +218,14 @@ const pushData = async () => {
     if (maxItemId.rows[0]?.max_id) {
       await client.query(`SELECT setval('inventory_items_id_seq', $1, true)`, [maxItemId.rows[0].max_id]);
     }
+    await client.query('ALTER TABLE inventory_items ALTER COLUMN id SET DEFAULT nextval(\'inventory_items_id_seq\')');
     
     // 3. Push Sales
     console.log('💰 Migrating sales...');
     const sales = await sqliteQuery('SELECT * FROM sales ORDER BY id');
+    
+    // Ensure sales table allows manual ID insertion
+    await client.query('ALTER TABLE sales ALTER COLUMN id DROP DEFAULT');
     
     for (const sale of sales) {
       await client.query(
@@ -201,6 +263,7 @@ const pushData = async () => {
     if (maxSaleId.rows[0]?.max_id) {
       await client.query(`SELECT setval('sales_id_seq', $1, true)`, [maxSaleId.rows[0].max_id]);
     }
+    await client.query('ALTER TABLE sales ALTER COLUMN id SET DEFAULT nextval(\'sales_id_seq\')');
     
     // Commit transaction
     await client.query('COMMIT');
