@@ -2,6 +2,10 @@
   "name": "prestige-inventory-client",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=18.x",
+    "npm": ">=9.x"
+  },
   "dependencies": {
     "axios": "^1.6.2",
     "firebase": "^12.6.0",
@@ -37,5 +41,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
+  }
 }
