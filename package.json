@@ -17,7 +17,8 @@
     "export-db": "node server/scripts/export-database.js",
     "import-db": "node server/scripts/import-database.js",
     "seed-vercel": "node server/scripts/seed-vercel-database.js",
-    "migrate-postgres": "node server/scripts/migrate-to-postgres.js"
+    "migrate-postgres": "node server/scripts/migrate-to-postgres.js",
+    "push-to-vercel": "node server/scripts/push-to-vercel-db.js"
   },
   "keywords": [
     "inventory",
