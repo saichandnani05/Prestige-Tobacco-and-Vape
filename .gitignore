@@ -1,7 +1,7 @@
 node_modules/
 client/node_modules/
 .env
-# Database files - uncommented to allow pushing to git
+# Database files - commented out to allow pushing to git
 # *.db
 # *.sqlite
 # *.sqlite3
