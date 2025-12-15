@@ -1,39 +1,27 @@
 /**
  * PostgreSQL Database Connection for Vercel
+ * Provides SQLite-compatible API for seamless migration
  * Uses Supabase (PostgreSQL) for production
- * Falls back to SQLite for local development
  */
 
 const { Pool } = require('pg');
-const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
-const path = require('path');
-const fs = require('fs');
 
 // Check if PostgreSQL connection string is available
 const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.SUPABASE_DB_URL;
 const USE_POSTGRES = !!DATABASE_URL;
 
-let db; // SQLite connection
 let pool; // PostgreSQL connection pool
 
-// Initialize database connection
-const init = async () => {
-  if (USE_POSTGRES) {
-    return initPostgres();
-  } else {
-    return initSQLite();
-  }
-};
-
 // Initialize PostgreSQL connection
-const initPostgres = async () => {
+const init = async () => {
+  if (!USE_POSTGRES) {
+    throw new Error('PostgreSQL database URL not configured');
+  }
+
   try {
-    // Parse connection string
-    const connectionString = DATABASE_URL;
-    
     pool = new Pool({
-      connectionString,
+      connectionString: DATABASE_URL,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
       max: 20,
       idleTimeoutMillis: 30000,
@@ -130,8 +118,8 @@ const createDefaultAdminPostgres = async (client) => {
     
     if (result.rows.length === 0) {
       const defaultPassword = await bcrypt.hash('Mautaz123', 10);
-      await client.query(
-        'INSERT INTO users (username, email, password, role, firebase_uid) VALUES ($1, $2, $3, $4, $5)',
+      const insertResult = await client.query(
+        'INSERT INTO users (username, email, password, role, firebase_uid) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         ['mautaz', 'mautaz@prestige.com', defaultPassword, 'admin', null]
       );
       console.log('✅ Default admin user created: username=mautaz, password=Mautaz123');
@@ -142,181 +130,122 @@ const createDefaultAdminPostgres = async (client) => {
   }
 };
 
-// Initialize SQLite connection (fallback for local development)
-const initSQLite = () => {
-  return new Promise((resolve, reject) => {
-    const DB_DIR = process.env.VERCEL === '1' ? '/tmp' : __dirname;
-    const DB_PATH = path.join(DB_DIR, 'inventory.db');
+// SQLite-compatible database adapter
+class PostgresAdapter {
+  constructor(pool) {
+    this.pool = pool;
+  }
 
-    if (!fs.existsSync(DB_DIR)) {
-      fs.mkdirSync(DB_DIR, { recursive: true });
-    }
+  // Convert SQLite parameter placeholders (?) to PostgreSQL ($1, $2, ...)
+  convertQuery(sql, params = []) {
+    let paramIndex = 1;
+    const convertedSql = sql.replace(/\?/g, () => `$${paramIndex++}`);
+    return { sql: convertedSql, params };
+  }
 
-    db = new sqlite3.Database(DB_PATH, (err) => {
-      if (err) {
-        console.error('Error opening SQLite database:', err);
-        reject(err);
-        return;
-      }
-      console.log('✅ Connected to SQLite database');
-      createSQLiteTables().then(resolve).catch(reject);
-    });
-  });
-};
-
-// Create SQLite tables (existing code)
-const createSQLiteTables = () => {
-  return new Promise((resolve, reject) => {
-    db.serialize(() => {
-      db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'user',
-        firebase_uid TEXT,
-        permissions TEXT DEFAULT '{}',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )`, (err) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+  // SQLite .run() equivalent - for INSERT, UPDATE, DELETE
+  run(sql, params, callback) {
+    const { sql: pgSql, params: pgParams } = this.convertQuery(sql, params);
+    
+    this.pool.query(pgSql, pgParams)
+      .then(result => {
+        // Create a mock 'this' object with lastID for SQLite compatibility
+        const mockThis = {
+          lastID: result.rows[0]?.id || result.insertId || null,
+          changes: result.rowCount || 0
+        };
         
-        db.run(`ALTER TABLE users ADD COLUMN firebase_uid TEXT`, () => {});
-        db.run(`ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '{}'`, () => {});
-      });
-
-      db.run(`CREATE TABLE IF NOT EXISTS inventory_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        product_name TEXT NOT NULL,
-        category TEXT,
-        brand TEXT,
-        quantity INTEGER NOT NULL DEFAULT 0,
-        unit_price REAL,
-        sku TEXT,
-        description TEXT,
-        status TEXT NOT NULL DEFAULT 'pending',
-        created_by INTEGER NOT NULL,
-        approved_by INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        approved_at DATETIME,
-        FOREIGN KEY (created_by) REFERENCES users(id),
-        FOREIGN KEY (approved_by) REFERENCES users(id)
-      )`, (err) => {
-        if (err) {
-          reject(err);
-          return;
+        if (callback) {
+          callback.call(mockThis, null);
+        }
+      })
+      .catch(error => {
+        if (callback) {
+          callback(error);
         }
       });
+  }
 
-      db.run(`CREATE TABLE IF NOT EXISTS sales (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        inventory_item_id INTEGER NOT NULL,
-        quantity_sold INTEGER NOT NULL,
-        unit_price REAL NOT NULL,
-        total_amount REAL NOT NULL,
-        sold_by INTEGER NOT NULL,
-        customer_name TEXT,
-        payment_method TEXT,
-        notes TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (inventory_item_id) REFERENCES inventory_items(id),
-        FOREIGN KEY (sold_by) REFERENCES users(id)
-      )`, (err) => {
-        if (err) {
-          reject(err);
-          return;
+  // SQLite .get() equivalent - returns first row
+  get(sql, params, callback) {
+    const { sql: pgSql, params: pgParams } = this.convertQuery(sql, params);
+    
+    this.pool.query(pgSql, pgParams)
+      .then(result => {
+        const row = result.rows[0] || null;
+        if (callback) {
+          callback(null, row);
+        }
+      })
+      .catch(error => {
+        if (callback) {
+          callback(error, null);
         }
       });
+  }
 
-      db.get('SELECT * FROM users WHERE role = ?', ['admin'], (err, row) => {
-        if (err) {
-          reject(err);
-          return;
+  // SQLite .all() equivalent - returns all rows
+  all(sql, params, callback) {
+    const { sql: pgSql, params: pgParams } = this.convertQuery(sql, params);
+    
+    this.pool.query(pgSql, pgParams)
+      .then(result => {
+        if (callback) {
+          callback(null, result.rows);
         }
-        
-        if (!row) {
-          const defaultPassword = bcrypt.hashSync('Mautaz123', 10);
-          db.run(
-            'INSERT INTO users (username, email, password, role, firebase_uid) VALUES (?, ?, ?, ?, ?)',
-            ['mautaz', 'mautaz@prestige.com', defaultPassword, 'admin', null],
-            (err) => {
-              if (err) {
-                reject(err);
-                return;
-              }
-              console.log('Default admin user created: username=mautaz, password=Mautaz123');
-              resolve();
-            }
-          );
-        } else {
-          resolve();
+      })
+      .catch(error => {
+        if (callback) {
+          callback(error, []);
         }
       });
-    });
-  });
-};
+  }
 
-// Get database connection (PostgreSQL or SQLite)
+  // Async versions for modern code
+  async runAsync(sql, params) {
+    const { sql: pgSql, params: pgParams } = this.convertQuery(sql, params);
+    const result = await this.pool.query(pgSql, pgParams);
+    return {
+      lastID: result.rows[0]?.id || null,
+      changes: result.rowCount || 0
+    };
+  }
+
+  async getAsync(sql, params) {
+    const { sql: pgSql, params: pgParams } = this.convertQuery(sql, params);
+    const result = await this.pool.query(pgSql, pgParams);
+    return result.rows[0] || null;
+  }
+
+  async allAsync(sql, params) {
+    const { sql: pgSql, params: pgParams } = this.convertQuery(sql, params);
+    const result = await this.pool.query(pgSql, pgParams);
+    return result.rows;
+  }
+}
+
+// Get database adapter (SQLite-compatible interface)
 const getDb = () => {
-  if (USE_POSTGRES) {
-    return pool;
-  } else {
-    return db;
+  if (!USE_POSTGRES) {
+    throw new Error('PostgreSQL not configured');
   }
-};
-
-// Query helper for PostgreSQL
-const query = async (text, params) => {
-  if (USE_POSTGRES) {
-    const client = await pool.connect();
-    try {
-      const result = await client.query(text, params);
-      return result.rows;
-    } finally {
-      client.release();
-    }
-  } else {
-    return new Promise((resolve, reject) => {
-      db.all(text, params, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
+  if (!pool) {
+    throw new Error('Database not initialized. Call init() first.');
   }
+  return new PostgresAdapter(pool);
 };
 
 // Close database connection
 const close = async () => {
-  if (USE_POSTGRES) {
-    if (pool) {
-      await pool.end();
-      console.log('PostgreSQL connection pool closed');
-    }
-  } else {
-    return new Promise((resolve, reject) => {
-      if (db) {
-        db.close((err) => {
-          if (err) {
-            reject(err);
-          } else {
-            console.log('SQLite database connection closed');
-            resolve();
-          }
-        });
-      } else {
-        resolve();
-      }
-    });
+  if (pool) {
+    await pool.end();
+    console.log('PostgreSQL connection pool closed');
   }
 };
 
 module.exports = {
   init,
   getDb,
-  query,
   close,
   USE_POSTGRES
 };
