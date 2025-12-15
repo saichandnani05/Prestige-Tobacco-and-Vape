@@ -1,7 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const db = require('./database');
+// Use PostgreSQL if DATABASE_URL is set, otherwise use SQLite
+const db = (process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.SUPABASE_DB_URL)
+  ? require('./database-postgres')
+  : require('./database');
 const authRoutes = require('./routes/auth');
 const inventoryRoutes = require('./routes/inventory');
 const userRoutes = require('./routes/users');

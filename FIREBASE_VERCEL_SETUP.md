@@ -101,3 +101,4 @@ If you have multiple Vercel deployments (production, staging, etc.):
 
 - [Firebase Documentation: Authorized Domains](https://firebase.google.com/docs/auth/web/domain-whitelisting)
 - [Vercel Documentation: Custom Domains](https://vercel.com/docs/concepts/projects/domains)
+

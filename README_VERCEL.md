@@ -131,3 +131,4 @@ If you prefer to deploy frontend and backend separately:
 For issues, check:
 - Vercel documentation: https://vercel.com/docs
 - Project README.md for local setup instructions
+

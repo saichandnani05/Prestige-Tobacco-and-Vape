@@ -16,7 +16,8 @@
     "scrape-all-vapes": "node server/scripts/scrape-all-vapes.js",
     "export-db": "node server/scripts/export-database.js",
     "import-db": "node server/scripts/import-database.js",
-    "seed-vercel": "node server/scripts/seed-vercel-database.js"
+    "seed-vercel": "node server/scripts/seed-vercel-database.js",
+    "migrate-postgres": "node server/scripts/migrate-to-postgres.js"
   },
   "keywords": [
     "inventory",
@@ -36,6 +37,7 @@
     "express": "^4.18.2",
     "firebase-admin": "^13.6.0",
     "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3",
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {
