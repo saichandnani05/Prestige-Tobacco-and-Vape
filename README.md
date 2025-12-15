@@ -129,10 +129,7 @@ A full-stack inventory management system with user and admin roles, featuring au
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:5001
 
-## Default Admin Credentials
 
-- **Username**: `mautaz`
-- **Password**: `Mautaz123`
 
 **⚠️ Important**: Change the admin password after first login in production!
 
