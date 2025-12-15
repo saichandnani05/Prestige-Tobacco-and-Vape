@@ -90,6 +90,29 @@ Make sure all environment variables are set in Vercel dashboard:
 - Remember that `/tmp` is ephemeral on Vercel
 - Consider migrating to a cloud database for production use
 
+### Firebase: Error (auth/unauthorized-domain)
+This error occurs when your Vercel domain is not authorized in Firebase Console.
+
+**To fix this:**
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project (e.g., `prestige-vape`)
+3. Go to **Authentication** → **Settings** → **Authorized domains**
+4. Click **Add domain**
+5. Add your Vercel domain(s):
+   - `your-project.vercel.app` (your main Vercel domain)
+   - `your-project-*.vercel.app` (preview deployments - optional)
+   - Your custom domain if you have one
+6. Click **Add**
+7. Wait a few minutes for changes to propagate
+8. Refresh your Vercel deployment
+
+**Note:** By default, Firebase allows:
+- `localhost` (for development)
+- `*.firebaseapp.com` (Firebase hosting)
+
+You must manually add Vercel domains for production use.
+
 ## Alternative: Separate Deployments
 
 If you prefer to deploy frontend and backend separately:
