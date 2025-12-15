@@ -152,10 +152,11 @@ router.put('/:id', authenticate, (req, res) => {
       return res.status(403).json({ error: 'You can only edit your own pending items' });
     }
 
-    // Admins can edit any item, but if it's approved, it goes back to pending
+    // Admins can edit any item and keep the status (no need to revert to pending)
     let newStatus = item.status;
-    if (req.userRole === 'admin' && item.status === 'approved') {
-      newStatus = 'pending';
+    // Only change status if explicitly provided, otherwise keep current status
+    if (req.body.status !== undefined) {
+      newStatus = req.body.status;
     }
 
     database.run(`

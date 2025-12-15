@@ -1,0 +1,238 @@
+.sales-tracker-container {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 20px rgba(220, 20, 60, 0.1);
+  margin-bottom: 0;
+  border: 1px solid #333333;
+}
+
+.sales-tracker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.sales-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sales-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.sales-stat-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: none;
+  animation: none;
+}
+
+.sales-stat-card:hover {
+  transform: none;
+  border-color: rgba(220, 20, 60, 0.5);
+  box-shadow: 0 4px 12px rgba(220, 20, 60, 0.2);
+}
+
+.sales-stat-card:hover .stat-icon {
+  transform: none;
+  animation: none;
+  transition: none;
+}
+
+.sales-stat-card.revenue {
+  border-left: 4px solid #10b981;
+}
+
+.sales-stat-card.revenue:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+.sales-stat-card.sales {
+  border-left: 4px solid #3b82f6;
+}
+
+.sales-stat-card.items {
+  border-left: 4px solid #f59e0b;
+}
+
+.sales-stat-card.average {
+  border-left: 4px solid #8b5cf6;
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+  will-change: auto;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  color: #e5e5e5;
+  font-size: 13px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  font-family: 'Oswald', sans-serif;
+}
+
+.sales-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.recent-sales-section,
+.top-products-section {
+  background: rgba(26, 26, 26, 0.5);
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #333;
+}
+
+.recent-sales-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.sale-item {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  padding: 12px;
+  border-left: 3px solid #10b981;
+  transition: all 0.2s;
+}
+
+.sale-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(4px);
+}
+
+.sale-item-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sale-product {
+  flex: 1;
+  min-width: 200px;
+}
+
+.sale-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sale-item-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.top-products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.top-product-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border-left: 3px solid #dc143c;
+  transition: all 0.2s;
+}
+
+.top-product-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(4px);
+}
+
+.product-rank {
+  font-size: 18px;
+  font-weight: 700;
+  color: #dc143c;
+  min-width: 30px;
+  text-align: center;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-stats {
+  text-align: right;
+}
+
+/* Custom Scrollbar */
+.recent-sales-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.recent-sales-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.recent-sales-list::-webkit-scrollbar-thumb {
+  background: rgba(220, 20, 60, 0.5);
+  border-radius: 10px;
+}
+
+.recent-sales-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(220, 20, 60, 0.7);
+}
+
+@media (max-width: 768px) {
+  .sales-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .sales-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sales-tracker-header {
+    flex-direction: column;
+  }
+}
+
+
+

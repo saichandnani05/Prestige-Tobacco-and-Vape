@@ -4,7 +4,11 @@ A full-stack inventory management system with user and admin roles, featuring au
 
 ## Features
 
-- **User Authentication**: Register and login system
+- **User Authentication**: 
+  - Firebase Authentication with Email/Password
+  - **Google Sign-In**: Employees can sign in/sign up with their Google accounts
+  - **Apple Sign-In**: Employees can sign in/sign up with their Apple accounts
+  - Legacy username/password authentication (backward compatible)
 - **Role-Based Access Control**:
   - **Users**: Can read approved items and write/create new items (pending approval)
   - **Admins**: Full read, write, edit, and approval permissions
@@ -19,11 +23,13 @@ A full-stack inventory management system with user and admin roles, featuring au
 - Node.js with Express
 - SQLite database
 - JWT authentication
+- Firebase Admin SDK for token verification
 - bcryptjs for password hashing
 
 ### Frontend
 - React 18
 - React Router for navigation
+- Firebase Authentication
 - Axios for API calls
 - Modern CSS with responsive design
 
@@ -52,12 +58,56 @@ A full-stack inventory management system with user and admin roles, featuring au
    npm run install-all
    ```
 
-3. **Create environment file (optional):**
+3. **Set up Firebase Authentication:**
+   
+   ⚡ **Quick Setup (5 minutes):** See [QUICK_FIREBASE_SETUP.md](./QUICK_FIREBASE_SETUP.md)
+   
+   📖 **Detailed Guide:** See [FIREBASE_CONNECTION_GUIDE.md](./FIREBASE_CONNECTION_GUIDE.md)
+   
+   **Or use the setup script:**
    ```bash
-   cp .env.example .env
+   ./setup-firebase.sh
    ```
    
-   Edit `.env` and set your JWT_SECRET (or use the default for development)
+   **Manual Setup:**
+   
+   a. Go to [Firebase Console](https://console.firebase.google.com/)
+   
+   b. Create a new project or select an existing one
+   
+   c. Enable Authentication:
+      - Go to Authentication > Sign-in method
+      - Enable "Email/Password" provider
+      - Enable "Google" provider (for Google sign-in)
+      - Enable "Apple" provider (for Apple sign-in - requires Apple Developer account)
+   
+   d. Get your Firebase configuration:
+      - Go to Project Settings > General
+      - Scroll down to "Your apps" section
+      - Click the web icon (</>) to add a web app
+      - Copy the Firebase configuration object
+   
+   e. Create environment files:
+   
+   **For Client** (`client/.env`):
+   ```env
+   REACT_APP_FIREBASE_API_KEY=your-api-key
+   REACT_APP_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   REACT_APP_FIREBASE_PROJECT_ID=your-project-id
+   REACT_APP_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+   REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+   REACT_APP_FIREBASE_APP_ID=your-app-id
+   ```
+   
+   **For Server** (`.env` in root):
+   ```env
+   JWT_SECRET=your-secret-key-change-this-in-production
+   FIREBASE_API_KEY=your-api-key
+   FIREBASE_PROJECT_ID=your-project-id
+   PORT=5001
+   ```
+   
+   f. Update Firebase config in `client/src/firebase/config.js` with your credentials
 
 4. **Start the backend server:**
    ```bash
@@ -77,7 +127,7 @@ A full-stack inventory management system with user and admin roles, featuring au
 
 6. **Access the application:**
    - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
+   - Backend API: http://localhost:5001
 
 ## Default Admin Credentials
 
@@ -90,7 +140,10 @@ A full-stack inventory management system with user and admin roles, featuring au
 
 ### For Regular Users
 
-1. **Register/Login**: Create an account or login with existing credentials
+1. **Register/Login**: 
+   - **Social Login**: Sign in or sign up directly with Google or Apple accounts
+   - **Email/Password**: Create an account with email and password
+   - **Legacy Login**: Use username/password for existing accounts (e.g., admin/admin123)
 2. **Add Items**: Click "Add Item" to create new inventory entries
    - Items are automatically saved every 5 seconds while typing
    - Items start with "pending" status
@@ -107,8 +160,10 @@ A full-stack inventory management system with user and admin roles, featuring au
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
+- `POST /api/auth/register` - Register new user (legacy)
+- `POST /api/auth/login` - Login user (legacy)
+- `POST /api/auth/firebase` - Verify Firebase token and get/create user
+- `POST /api/auth/firebase/register` - Register user after Firebase signup
 
 ### Inventory
 - `GET /api/inventory` - Get all inventory items (filtered by user role)
@@ -165,9 +220,23 @@ Prestige Smoke Shop/
 
 ## Development
 
-- Backend runs on port 5000
+- Backend runs on port 5001
 - Frontend runs on port 3000 (proxy configured to backend)
 - Database file: `server/inventory.db`
+
+## Firebase Setup
+
+The application now uses Firebase Authentication for user sign up and sign in. To get started:
+
+1. Create a Firebase project at https://console.firebase.google.com/
+2. Enable Email/Password authentication in Firebase Console
+3. Add your Firebase configuration to `client/src/firebase/config.js` or use environment variables
+4. Add `FIREBASE_API_KEY` to your server `.env` file for token verification
+
+The app will automatically:
+- Create users in your database when they sign up with Firebase
+- Sync Firebase authentication with your backend
+- Maintain role-based access control
 
 ## License
 

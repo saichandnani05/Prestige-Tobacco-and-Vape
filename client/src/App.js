@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
@@ -11,21 +12,99 @@ import Navbar from './components/Navbar';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
+const pageVariants = {
+  initial: { opacity: 0, y: 20, scale: 0.98 },
+  animate: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
+  },
+  exit: { 
+    opacity: 0, 
+    y: -20, 
+    scale: 0.98,
+    transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+  }
+};
+
+const loadingVariants = {
+  initial: { opacity: 0 },
+  animate: { 
+    opacity: 1,
+    transition: { duration: 0.3 }
+  },
+  exit: { 
+    opacity: 0,
+    transition: { duration: 0.2 }
+  }
+};
+
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <motion.div 
+        className="loading"
+        variants={loadingVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #667eea',
+            borderRadius: '50%',
+            margin: '0 auto 20px'
+          }}
+        />
+        <p>Loading...</p>
+      </motion.div>
+    );
   }
 
-  return user ? children : <Navigate to="/login" />;
+  // If no user after loading, redirect to login but preserve the intended destination
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
 };
 
 const AdminRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <motion.div 
+        className="loading"
+        variants={loadingVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #667eea',
+            borderRadius: '50%',
+            margin: '0 auto 20px'
+          }}
+        />
+        <p>Loading...</p>
+      </motion.div>
+    );
   }
 
   return user && user.role === 'admin' ? children : <Navigate to="/dashboard" />;
@@ -33,55 +112,93 @@ const AdminRoute = ({ children }) => {
 
 function AppRoutes() {
   const { user } = useAuth();
+  const location = useLocation();
 
   return (
     <div className="app">
       {user && <Navbar />}
-      <Routes>
-        <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
-        <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/inventory"
-          element={
-            <PrivateRoute>
-              <InventoryList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/add-item"
-          element={
-            <PrivateRoute>
-              <AddInventoryItem />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/edit-item/:id"
-          element={
-            <PrivateRoute>
-              <EditInventoryItem />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          }
-        />
-        <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
-      </Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
+          <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <motion.div
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <Dashboard />
+                </motion.div>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/inventory"
+            element={
+              <PrivateRoute>
+                <motion.div
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <InventoryList />
+                </motion.div>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/add-item"
+            element={
+              <PrivateRoute>
+                <motion.div
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <AddInventoryItem />
+                </motion.div>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/edit-item/:id"
+            element={
+              <PrivateRoute>
+                <motion.div
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <EditInventoryItem />
+                </motion.div>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <motion.div
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <AdminDashboard />
+                </motion.div>
+              </AdminRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
+        </Routes>
+      </AnimatePresence>
     </div>
   );
 }

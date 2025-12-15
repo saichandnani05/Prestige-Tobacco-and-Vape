@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import axios from 'axios';
+import AnimatedDropdown from './AnimatedDropdown';
 
 const AddInventoryItem = () => {
   const navigate = useNavigate();
@@ -113,51 +115,107 @@ const AddInventoryItem = () => {
     }
   };
 
+  const formVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        staggerChildren: 0.1,
+        duration: 0.5
+      }
+    }
+  };
+
+  const fieldVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { opacity: 1, x: 0 }
+  };
+
   return (
-    <div className="container">
-      <h1>Add Inventory Item</h1>
+    <motion.div 
+      className="container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        Add Inventory Item
+      </motion.h1>
       
-      <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-          <span className={`status-indicator ${saving ? 'saving' : 'saved'}`}></span>
-          <span style={{ fontSize: '0.9rem', color: '#666' }}>
+      <motion.div 
+        className="card"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <motion.div 
+          style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <motion.span 
+            className={`status-indicator ${saving ? 'saving' : 'saved'}`}
+            animate={saving ? { scale: [1, 1.2, 1] } : {}}
+            transition={{ duration: 1, repeat: saving ? Infinity : 0 }}
+          />
+          <span style={{ fontSize: '0.9rem', color: '#e5e5e5' }}>
             {saving ? 'Auto-saving...' : 'Auto-save enabled (saves every 5 seconds)'}
           </span>
-        </div>
+        </motion.div>
 
         {status.message && (
-          <div className={`alert alert-${status.type === 'error' ? 'error' : status.type === 'success' ? 'success' : 'info'}`}>
+          <motion.div 
+            className={`alert alert-${status.type === 'error' ? 'error' : status.type === 'success' ? 'success' : 'info'}`}
+            initial={{ opacity: 0, x: -20, height: 0 }}
+            animate={{ opacity: 1, x: 0, height: 'auto' }}
+            exit={{ opacity: 0, x: 20, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
             {status.message}
-          </div>
+          </motion.div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
+        <motion.form 
+          onSubmit={handleSubmit}
+          variants={formVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div className="form-group" variants={fieldVariants}>
             <label>Product Name *</label>
-            <input
+            <motion.input
               type="text"
               name="product_name"
               value={formData.product_name}
               onChange={handleChange}
               required
+              whileFocus={{ scale: 1.02, boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)" }}
+              transition={{ duration: 0.2 }}
             />
-          </div>
+          </motion.div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            <div className="form-group">
+            <motion.div className="form-group" variants={fieldVariants}>
               <label>Category</label>
-              <select
-                name="category"
+              <AnimatedDropdown
+                options={[
+                  { value: '', label: 'Select Category' },
+                  { value: 'Tobacco', label: 'Tobacco' },
+                  { value: 'Vape', label: 'Vape' },
+                  { value: 'Accessories', label: 'Accessories' },
+                  { value: 'Other', label: 'Other' }
+                ]}
                 value={formData.category}
-                onChange={handleChange}
-              >
-                <option value="">Select Category</option>
-                <option value="Tobacco">Tobacco</option>
-                <option value="Vape">Vape</option>
-                <option value="Accessories">Accessories</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
+                onChange={(e) => handleChange({ target: { name: 'category', value: e.target.value } })}
+                placeholder="Select Category"
+              />
+            </motion.div>
 
             <div className="form-group">
               <label>Brand</label>
@@ -215,21 +273,34 @@ const AddInventoryItem = () => {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
+          <motion.div 
+            style={{ display: 'flex', gap: '10px' }}
+            variants={fieldVariants}
+          >
+            <motion.button 
+              type="submit" 
+              className="btn btn-primary" 
+              disabled={saving}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
               {saving ? 'Saving...' : 'Save Item'}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
               className="btn btn-secondary"
               onClick={() => navigate('/inventory')}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
             >
               Cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            </motion.button>
+          </motion.div>
+        </motion.form>
+      </motion.div>
+    </motion.div>
   );
 };
 

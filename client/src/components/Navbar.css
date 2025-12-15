@@ -1,8 +1,9 @@
 .navbar {
-  background-color: #2c3e50;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
   color: white;
   padding: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 20px rgba(220, 20, 60, 0.2);
+  border-bottom: 2px solid #dc143c;
 }
 
 .navbar-container {
@@ -19,7 +20,10 @@
   color: white;
   text-decoration: none;
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 700;
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .navbar-menu {
@@ -29,15 +33,40 @@
 }
 
 .navbar-link {
-  color: white;
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  padding: 8px 12px;
-  border-radius: 4px;
-  transition: background-color 0.3s;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  position: relative;
+  display: inline-block;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .navbar-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(220, 20, 60, 0.2);
+  color: #dc143c;
+  box-shadow: 0 0 10px rgba(220, 20, 60, 0.3);
+}
+
+.navbar-link.active {
+  color: #fff;
+  font-weight: 600;
+}
+
+.navbar-link-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #dc143c 0%, #b91c1c 100%);
+  box-shadow: 0 0 10px rgba(220, 20, 60, 0.8);
+  border-radius: 2px 2px 0 0;
 }
 
 .navbar-user {

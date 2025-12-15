@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
 
@@ -42,10 +43,36 @@ const Register = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <h2>Register for Prestige Inventory</h2>
-        {error && <div className="alert alert-error">{error}</div>}
-        <form onSubmit={handleSubmit}>
+      <motion.div 
+        className="auth-card"
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+      >
+        <motion.h2
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          Register for Prestige Inventory
+        </motion.h2>
+        {error && (
+          <motion.div 
+            className="alert alert-error"
+            initial={{ opacity: 0, x: -20, height: 0 }}
+            animate={{ opacity: 1, x: 0, height: 'auto' }}
+            exit={{ opacity: 0, x: 20, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {error}
+          </motion.div>
+        )}
+        <motion.form 
+          onSubmit={handleSubmit}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
           <div className="form-group">
             <label>Username</label>
             <input
@@ -84,14 +111,26 @@ const Register = () => {
               minLength={6}
             />
           </div>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <motion.button 
+            type="submit" 
+            className="btn btn-primary" 
+            disabled={loading}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+          >
             {loading ? 'Registering...' : 'Register'}
-          </button>
-        </form>
-        <p className="auth-footer">
+          </motion.button>
+        </motion.form>
+        <motion.p 
+          className="auth-footer"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
           Already have an account? <Link to="/login">Login here</Link>
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
     </div>
   );
 };

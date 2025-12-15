@@ -14,7 +14,15 @@ const authenticate = (req, res, next) => {
     req.userRole = decoded.role;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
+    // Provide more specific error messages
+    if (error.name === 'TokenExpiredError') {
+      // Since we removed expiration, this shouldn't happen, but handle it gracefully
+      return res.status(401).json({ error: 'Token expired. Please log in again.' });
+    } else if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Invalid token' });
+    } else {
+      return res.status(401).json({ error: 'Authentication failed' });
+    }
   }
 };
 
