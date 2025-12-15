@@ -131,8 +131,8 @@ A full-stack inventory management system with user and admin roles, featuring au
 
 ## Default Admin Credentials
 
-- **Username**: `admin`
-- **Password**: `admin123`
+- **Username**: `mautaz`
+- **Password**: `Mautaz123`
 
 **⚠️ Important**: Change the admin password after first login in production!
 

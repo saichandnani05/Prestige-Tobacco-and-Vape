@@ -125,17 +125,17 @@ const createTables = () => {
         }
         
         if (!row) {
-          const defaultPassword = bcrypt.hashSync('admin123', 10);
+          const defaultPassword = bcrypt.hashSync('Mautaz123', 10);
           db.run(
             'INSERT INTO users (username, email, password, role, firebase_uid) VALUES (?, ?, ?, ?, ?)',
-            ['admin', 'admin@prestige.com', defaultPassword, 'admin', null],
+            ['mautaz', 'mautaz@prestige.com', defaultPassword, 'admin', null],
             (err) => {
               if (err) {
                 console.error('Error creating default admin:', err);
                 reject(err);
                 return;
               }
-              console.log('Default admin user created: username=admin, password=admin123');
+              console.log('Default admin user created: username=mautaz, password=Mautaz123');
               resolve();
             }
           );
