@@ -26,7 +26,31 @@ const init = () => {
         return;
       }
       console.log('Connected to SQLite database');
-      createTables().then(resolve).catch(reject);
+      
+      // On Vercel, try to import existing database if available
+      if (process.env.VERCEL === '1') {
+        const fs = require('fs');
+        const path = require('path');
+        const sqlExport = path.join(__dirname, 'database-export.sql');
+        
+        if (fs.existsSync(sqlExport)) {
+          console.log('📦 Found database export on Vercel, importing...');
+          const sql = fs.readFileSync(sqlExport, 'utf8');
+          db.exec(sql, (err) => {
+            if (err) {
+              console.log('⚠️ Could not import database export, creating fresh database');
+              createTables().then(resolve).catch(reject);
+            } else {
+              console.log('✅ Database imported successfully on Vercel');
+              resolve();
+            }
+          });
+        } else {
+          createTables().then(resolve).catch(reject);
+        }
+      } else {
+        createTables().then(resolve).catch(reject);
+      }
     });
   });
 };

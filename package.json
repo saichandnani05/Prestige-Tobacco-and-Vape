@@ -13,7 +13,10 @@
     "build": "cd client && npm run build",
     "install-all": "npm install && cd client && npm install",
     "scrape-vapes": "node server/scripts/scrape-vapes.js",
-    "scrape-all-vapes": "node server/scripts/scrape-all-vapes.js"
+    "scrape-all-vapes": "node server/scripts/scrape-all-vapes.js",
+    "export-db": "node server/scripts/export-database.js",
+    "import-db": "node server/scripts/import-database.js",
+    "seed-vercel": "node server/scripts/seed-vercel-database.js"
   },
   "keywords": [
     "inventory",
